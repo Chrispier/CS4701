@@ -135,6 +135,7 @@ class Piece(object):
         self.color = shape_colors[shapes.index(shape)]
         self.rotation = 0
 
+
 # Initialize the grid
 # Return the updated grid with proper values for the occupancy and colors
 def create_grid(locked_pos={}):
@@ -262,6 +263,7 @@ def draw_next_shape(shape, surface):
     surface.blit(label, (sx + 10, sy - 30))
 
 
+# Write the end score in the text document if it is highest
 def update_score(nscore):
     score = max_score()
 
@@ -272,6 +274,7 @@ def update_score(nscore):
     #    f.write(str(nscore))
 
 
+# Read the high score from the text document
 def max_score():
     #f = open('scores.txt', 'r')
     #lines = f.readlines()
@@ -372,6 +375,7 @@ def main(win):
                     current_piece.rotation += 1
                     if not(valid_space(current_piece, grid)):
                         current_piece.rotation -= 1
+                # Quick Drop
                 if event.key == pygame.K_SPACE:
                     while (valid_space(current_piece, grid)):
                         current_piece.y += 1
