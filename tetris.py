@@ -13,7 +13,7 @@ block_size = 30
 top_left_x = (scene_width - play_width) // 2
 top_left_y = scene_height - play_height - 50
 
-
+temp = False
 # Pieces represented as nested string lists
 # 0's represent an occupioed block and . is a vacant space
 # Pieces follow tetris naming convention
@@ -177,8 +177,7 @@ def valid_space(shape, grid):
     formatted = convert_shape_format(shape)
 
     for pos in formatted:
-        if pos not in accepted_pos:
-            if pos[1] > -1:
+        if (pos not in accepted_pos) and (pos[1] > -1):
                 return False
     return True
 
@@ -267,20 +266,20 @@ def draw_next_shape(shape, surface):
 def update_score(nscore):
     score = max_score()
 
-    f = open('scores.txt', 'w')
-    if int(score) > nscore:
-       f.write(str(score))
-    else:
-       f.write(str(nscore))
+    #f = open('scores.txt', 'w')
+    #if int(score) > nscore:
+    #   f.write(str(score))
+    #else:
+    #   f.write(str(nscore))
 
 
 # Read the high score from the text document
 def max_score():
-    f = open('scores.txt', 'r')
-    lines = f.readlines()
-    score = lines[0].strip()
+    #f = open('scores.txt', 'r')
+    #lines = f.readlines()
+    #score = lines[0].strip()
 
-    return score
+    return '0'
 
 
 # Displays the game window
@@ -334,6 +333,7 @@ def main(win):
     fall_speed = 0.27
     level_time = 0
     score = 0
+    temp = False
 
     while run:
         grid = create_grid(locked_positions)
@@ -346,12 +346,24 @@ def main(win):
             if level_time > 0.12:
                 level_time -= 0.005
 
+
         if fall_time/1000 > fall_speed:
             fall_time = 0
-            current_piece.y += 1
+            temp = True
+            #current_piece.y += 1
             if not(valid_space(current_piece, grid)) and current_piece.y > 0:
                 current_piece.y -= 1
                 change_piece = True
+
+        #if temp:
+        #    a_left = pygame.event.Event(pygame.KEYDOWN, unicode = "left",key = pygame.K_LEFT, mod=pygame.KMOD_NONE)
+        #    pygame.event.post(a_left)
+        #    a_rotate = pygame.event.Event(pygame.KEYDOWN, unicode = "up",key = pygame.K_UP, mod=pygame.KMOD_NONE)
+        #    pygame.event.post(a_rotate)
+            #current_piece.x -= 1
+            #if not(valid_space(current_piece, grid)):
+            #    current_piece.x += 1
+        #    temp = False
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
