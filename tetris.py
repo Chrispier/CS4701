@@ -15,115 +15,116 @@ top_left_y = scene_height - play_height - 50
 
 
 # Pieces represented as nested string lists
-# 0's represent an occupioed block and . is a vacant space
+# 0's represent an occupied block and is a vacant space
 # Pieces follow tetris naming convention
 # Lists are used to represent the different rotations
 piece_S = [['.....',
-      '.....',
-      '..00.',
-      '.00..',
-      '.....'],
-     ['.....',
-      '..0..',
-      '..00.',
-      '...0.',
-      '.....']]
+            '.....',
+            '..00.',
+            '.00..',
+            '.....'],
+           ['.....',
+            '..0..',
+            '..00.',
+            '...0.',
+            '.....']]
 
 piece_Z = [['.....',
-      '.....',
-      '.00..',
-      '..00.',
-      '.....'],
-     ['.....',
-      '..0..',
-      '.00..',
-      '.0...',
-      '.....']]
+            '.....',
+            '.00..',
+            '..00.',
+            '.....'],
+           ['.....',
+            '..0..',
+            '.00..',
+            '.0...',
+            '.....']]
 
 piece_I = [['..0..',
-      '..0..',
-      '..0..',
-      '..0..',
-      '.....'],
-     ['.....',
-      '0000.',
-      '.....',
-      '.....',
-      '.....']]
+            '..0..',
+            '..0..',
+            '..0..',
+            '.....'],
+           ['.....',
+            '0000.',
+            '.....',
+            '.....',
+            '.....']]
 
 piece_O = [['.....',
-      '.....',
-      '.00..',
-      '.00..',
-      '.....']]
+            '.....',
+            '.00..',
+            '.00..',
+            '.....']]
 
 piece_J = [['.....',
-      '.0...',
-      '.000.',
-      '.....',
-      '.....'],
-     ['.....',
-      '..00.',
-      '..0..',
-      '..0..',
-      '.....'],
-     ['.....',
-      '.....',
-      '.000.',
-      '...0.',
-      '.....'],
-     ['.....',
-      '..0..',
-      '..0..',
-      '.00..',
-      '.....']]
+            '.0...',
+            '.000.',
+            '.....',
+            '.....'],
+           ['.....',
+            '..00.',
+            '..0..',
+            '..0..',
+            '.....'],
+           ['.....',
+            '.....',
+            '.000.',
+            '...0.',
+            '.....'],
+           ['.....',
+            '..0..',
+            '..0..',
+            '.00..',
+            '.....']]
 
 piece_L = [['.....',
-      '...0.',
-      '.000.',
-      '.....',
-      '.....'],
-     ['.....',
-      '..0..',
-      '..0..',
-      '..00.',
-      '.....'],
-     ['.....',
-      '.....',
-      '.000.',
-      '.0...',
-      '.....'],
-     ['.....',
-      '.00..',
-      '..0..',
-      '..0..',
-      '.....']]
+            '...0.',
+            '.000.',
+            '.....',
+            '.....'],
+           ['.....',
+            '..0..',
+            '..0..',
+            '..00.',
+            '.....'],
+           ['.....',
+            '.....',
+            '.000.',
+            '.0...',
+            '.....'],
+           ['.....',
+            '.00..',
+            '..0..',
+            '..0..',
+            '.....']]
 
 piece_T = [['.....',
-      '..0..',
-      '.000.',
-      '.....',
-      '.....'],
-     ['.....',
-      '..0..',
-      '..00.',
-      '..0..',
-      '.....'],
-     ['.....',
-      '.....',
-      '.000.',
-      '..0..',
-      '.....'],
-     ['.....',
-      '..0..',
-      '.00..',
-      '..0..',
-      '.....']]
+            '..0..',
+            '.000.',
+            '.....',
+            '.....'],
+           ['.....',
+            '..0..',
+            '..00.',
+            '..0..',
+            '.....'],
+           ['.....',
+            '.....',
+            '.000.',
+            '..0..',
+            '.....'],
+           ['.....',
+            '..0..',
+            '.00..',
+            '..0..',
+            '.....']]
 
 # Organizes the shapes to match its designated color
 # Shapes 0-6
 shapes = [piece_S, piece_Z, piece_I, piece_O, piece_J, piece_L, piece_T]
-shape_colors = [(7, 225, 27), (255, 50, 19), (10, 233, 245), (255, 213, 0), (9, 68, 230), (255, 151, 28), (204 , 37, 207)]
+shape_colors = [(7, 225, 27), (255, 50, 19), (10, 233, 245),
+                (255, 213, 0), (9, 68, 230), (255, 151, 28), (204, 37, 207)]
 
 
 # Piece includes the location (coordinates), shape, color, and rotation
@@ -154,9 +155,9 @@ def create_grid(locked_pos={}):
 # Manages the rotation of the pieces
 def convert_shape_format(shape):
     positions = []
-    format = shape.shape[shape.rotation % len(shape.shape)]
+    formatshape = shape.shape[shape.rotation % len(shape.shape)]
 
-    for i, line in enumerate(format):
+    for i, line in enumerate(formatshape):
         row = list(line)
         for j, column in enumerate(row):
             if column == '0':
@@ -171,15 +172,15 @@ def convert_shape_format(shape):
 # Determine whether a space is already occupied, disables invalid moves
     # and detects collisions
 def valid_space(shape, grid):
-    accepted_pos = [[(j, i) for j in range(10) if grid[i][j] == (0, 0, 0)] for i in range(20)]
+    accepted_pos = [[(j, i) for j in range(10) if grid[i]
+                     [j] == (0, 0, 0)] for i in range(20)]
     accepted_pos = [j for sub in accepted_pos for j in sub]
 
     formatted = convert_shape_format(shape)
 
     for pos in formatted:
-        if pos not in accepted_pos:
-            if pos[1] > -1:
-                return False
+        if pos not in accepted_pos and pos[1] > -1:
+            return False
     return True
 
 
@@ -202,7 +203,8 @@ def draw_text_middle(surface, text, size, color):
     font = pygame.font.SysFont("arial", size, bold=True)
     label = font.render(text, 1, color)
 
-    surface.blit(label, (top_left_x + play_width/2 - (label.get_width()/2), top_left_y + play_height/2 - label.get_height()/2))
+    surface.blit(label, (top_left_x + play_width/2 - (label.get_width()/2),
+                         top_left_y + play_height/2 - label.get_height()/2))
 
 
 # Draws the grid used for the game
@@ -213,9 +215,11 @@ def draw_grid(surface, grid):
 
     # The lines for the grid
     for i in range(len(grid)):
-        pygame.draw.line(surface, (128, 128, 128), (sx, sy + i*block_size), (sx+play_width, sy+ i*block_size))
+        pygame.draw.line(surface, (128, 128, 128), (sx, sy +
+                                                    i*block_size), (sx+play_width, sy + i*block_size))
         for j in range(len(grid[i])):
-            pygame.draw.line(surface, (128, 128, 128), (sx + j*block_size, sy),(sx + j*block_size, sy + play_height))
+            pygame.draw.line(surface, (128, 128, 128), (sx + j *
+                                                        block_size, sy), (sx + j*block_size, sy + play_height))
 
 
 # If a row is full, this removes the blocks and moves the above values down
@@ -252,13 +256,14 @@ def draw_next_shape(shape, surface):
     # Location of the next shape graphic
     sx = top_left_x + play_width + 50
     sy = top_left_y + play_height/2 - 100
-    format = shape.shape[shape.rotation % len(shape.shape)]
+    formatshape = shape.shape[shape.rotation % len(shape.shape)]
 
-    for i, line in enumerate(format):
+    for i, line in enumerate(formatshape):
         row = list(line)
         for j, column in enumerate(row):
             if column == '0':
-                pygame.draw.rect(surface, shape.color, (sx + j*block_size, sy + i*block_size, block_size, block_size), 0)
+                pygame.draw.rect(surface, shape.color, (sx + j*block_size,
+                                                        sy + i*block_size, block_size, block_size), 0)
 
     surface.blit(label, (sx + 10, sy - 30))
 
@@ -269,9 +274,9 @@ def update_score(nscore):
 
     f = open('scores.txt', 'w')
     if int(score) > nscore:
-       f.write(str(score))
+        f.write(str(score))
     else:
-       f.write(str(nscore))
+        f.write(str(nscore))
 
 
 # Read the high score from the text document
@@ -292,7 +297,8 @@ def draw_window(surface, grid, score=0, last_score=0):
     font = pygame.font.SysFont('arial', 60)
     label = font.render('CS 4701', 1, (255, 255, 255))
 
-    surface.blit(label, (top_left_x + play_width / 2 - (label.get_width() / 2), 30))
+    surface.blit(label, (top_left_x + play_width /
+                         2 - (label.get_width() / 2), 30))
 
     # Current score
     font = pygame.font.SysFont('arial', 30)
@@ -312,9 +318,11 @@ def draw_window(surface, grid, score=0, last_score=0):
 
     for i in range(len(grid)):
         for j in range(len(grid[i])):
-            pygame.draw.rect(surface, grid[i][j], (top_left_x + j*block_size, top_left_y + i*block_size, block_size, block_size), 0)
+            pygame.draw.rect(surface, grid[i][j], (top_left_x + j*block_size,
+                                                   top_left_y + i*block_size, block_size, block_size), 0)
 
-    pygame.draw.rect(surface, (255, 255, 255), (top_left_x, top_left_y, play_width, play_height), 5)
+    pygame.draw.rect(surface, (255, 255, 255), (top_left_x,
+                                                top_left_y, play_width, play_height), 5)
 
     draw_grid(surface, grid)
     # pygame.display.update()
@@ -323,7 +331,6 @@ def draw_window(surface, grid, score=0, last_score=0):
 def main(win):
     last_score = max_score()
     locked_positions = {}
-    grid = create_grid(locked_positions)
 
     change_piece = False
     run = True
