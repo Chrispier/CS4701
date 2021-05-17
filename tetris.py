@@ -404,6 +404,8 @@ def main(win):
                     if not(valid_space(current_piece, grid)) and current_piece.y > 0:
                         current_piece.y -= 1
                         change_piece = True
+                if event.key == pygame.K_s:
+                    current_piece.y = 4
                 if event.key == pygame.K_a:
                     moves = ai(current_piece, next_piece, grid)
                     best_move = moves.pop(0)
@@ -467,10 +469,10 @@ def heur_height(current_piece):
     shape = convert_shape_format(current_piece)
     height = sorted(shape, key=lambda x: x[1])
     max_height = height[0]
-    if (max_height > 10):
-        return max_height * -2
+    if (max_height[1] > 10):
+        return max_height[1] * -2
     else:
-        return max_height * -5
+        return max_height[1] * -5
 
 
 def heur_gaps(current_piece, grid):
@@ -500,30 +502,32 @@ def heur_rows(current_piece, grid):
 
 def ai(current_piece, next_piece, grid):
     moves = []
+    current_piece.y = 4
     num_of_rotation = len(current_piece.shape)
-    while (num_of_rotation > 0):
-        #goes all the way to the left
+    #while (num_of_rotation > 0):
+    #goes all the way to the left
+    while (valid_space(current_piece, grid)):
+        current_piece.x -= 1
+    current_piece.x += 1
+    #goes one block at a time to the right
+    while (valid_space(current_piece, grid)):
+        #drops piece to the bottom
         while (valid_space(current_piece, grid)):
-            current_piece.x -= 1
-        #goes one block at a time to the right
-        while (valid_space(current_piece, grid)):
-            current_piece.x += 1
-            #drops piece to the bottom
-            while (valid_space(current_piece, grid)):
-                current_piece.y += 1
-            if not(valid_space(current_piece, grid)):
-                current_piece.y -= 1
-            #Heuristics
-            value = heur_height(current_piece) + heur_gaps(current_piece, grid)
-            + heur_rows(current_piece, grid)
-            new_move = Move(current_piece.shape, current_piece.x, current_piece.y,
-                        current_piece.rotation, value)
-            moves.append(new_move)
-            #moves.sort(move.value, True)
-            print('yo')
-            current_piece.y = 0
-        num_of_rotation -= 1
-        current_piece.rotation += 1
+            current_piece.y += 1
+        if not(valid_space(current_piece, grid)):
+            current_piece.y -= 1
+        #Heuristics
+        value = heur_height(current_piece) + heur_gaps(current_piece, grid)
+        + heur_rows(current_piece, grid)
+        new_move = Move(current_piece.shape, current_piece.x, current_piece.y,
+                    current_piece.rotation, value)
+        moves.append(new_move)
+        #moves.sort(move.value, True)
+        print('yo')
+        current_piece.y = 4
+        current_piece.x += 1
+    #    num_of_rotation -= 1
+    #    current_piece.rotation += 1
     return moves
 
 
