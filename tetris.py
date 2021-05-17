@@ -503,7 +503,7 @@ def heur_gaps(current_piece, grid):
                 if (j, y) in accepted_pos and not((j, y) in shape):
                     gap += 1
                 y += 1
-    return gap * -20
+    return gap * -25
 
 
 def heur_rows(current_piece, grid):
@@ -513,14 +513,15 @@ def heur_rows(current_piece, grid):
     for pos in shape_pos:
         p = (pos[0], pos[1])
         locked_positions[p] = current_piece.color
-    return clear_rows(grid_temp, locked_positions) * 10
+    return clear_rows(grid_temp, locked_positions) * 30
 
 
 def ai(current_piece, next_piece, grid):
     moves = []
     current_piece.y = 4
+    current_piece.rotation = 0
     num_of_rotation = len(current_piece.shape)
-    while (num_of_rotation > 0):
+    while (num_of_rotation >= 0):
         #goes all the way to the left
         while (valid_space(current_piece, grid)):
             current_piece.x -= 1
@@ -539,12 +540,17 @@ def ai(current_piece, next_piece, grid):
                         current_piece.shape, current_piece.rotation, value)
             moves.append(new_move)
             #moves.sort(new_move.value, True)
-            print('yo')
+            print(current_piece.rotation)
             current_piece.y = 4
             current_piece.x += 1
         num_of_rotation -= 1
+        current_piece.y = 4
+        current_piece.x = 4
         current_piece.rotation += 1
+        if not(valid_space(current_piece, grid)):
+            current_piece.rotation -= 1
     sort_moves = sorted(moves, key=lambda x: x.value)
+    print('YO')
     return sort_moves
 
 
