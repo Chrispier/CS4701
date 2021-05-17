@@ -271,22 +271,22 @@ def draw_next_shape(shape, surface):
 
 # Write the end score in the text document if it is highest
 def update_score(nscore):
-    score = max_score()
+    score = 0
 
-    f = open('scores.txt', 'w')
-    if int(score) > nscore:
-        f.write(str(score))
-    else:
-        f.write(str(nscore))
+#    f = open('scores.txt', 'w')
+#    if int(score) > nscore:
+#        f.write(str(score))
+#    else:
+#        f.write(str(nscore))
 
 
 # Read the high score from the text document
 def max_score():
-    f = open('scores.txt', 'r')
-    lines = f.readlines()
-    score = lines[0].strip()
+#    f = open('scores.txt', 'r')
+#    lines = f.readlines()
+#    score = lines[0].strip()
 
-    return score
+    return '0'
 
 
 # Displays the game window
@@ -406,10 +406,10 @@ def main(win):
                         change_piece = True
                 if event.key == pygame.K_a:
                     moves = ai(current_piece, next_piece, grid)
-                    move = moves[0]
-                    current_piece.rotation = move.rotation
-                    current_piece.y = move.y
-                    current_piece.x = move.x
+                    best_move = moves.pop(0)
+                    current_piece.rotation = best_move.rotation
+                    current_piece.y = best_move.y
+                    current_piece.x = best_move.x
         shape_pos = convert_shape_format(current_piece)
 
         for i in range(len(shape_pos)):
@@ -480,7 +480,7 @@ def heur_gaps(current_piece, grid):
                     [j] == (0, 0, 0)] for i in range(20)]
     accepted_pos = [j for sub in accepted_pos for j in sub]
     for (j, i) in shape:
-        y = i
+        y = i+1
         while (y < 19):
             if (j, y) in accepted_pos:
                 gap += 1
@@ -500,24 +500,29 @@ def heur_rows(current_piece, grid):
 
 def ai(current_piece, next_piece, grid):
     moves = []
-    rotation = len(current_piece.shape)
-    while (rotation > 0):
+    num_of_rotation = len(current_piece.shape)
+    while (num_of_rotation > 0):
+        #goes all the way to the left
         while (valid_space(current_piece, grid)):
             current_piece.x -= 1
+        #goes one block at a time to the right
         while (valid_space(current_piece, grid)):
             current_piece.x += 1
+            #drops piece to the bottom
             while (valid_space(current_piece, grid)):
                 current_piece.y += 1
             if not(valid_space(current_piece, grid)):
                 current_piece.y -= 1
+            #Heuristics
             value = heur_height(current_piece) + heur_gaps(current_piece, grid)
             + heur_rows(current_piece, grid)
-            move = Move(current_piece.shape, current_piece.x, current_piece.y,
+            new_move = Move(current_piece.shape, current_piece.x, current_piece.y,
                         current_piece.rotation, value)
-            move.append(move)
-            moves.sort(move.value, True)
+            moves.append(new_move)
+            #moves.sort(move.value, True)
+            print('yo')
             current_piece.y = 0
-        rotation -= 1
+        num_of_rotation -= 1
         current_piece.rotation += 1
     return moves
 
