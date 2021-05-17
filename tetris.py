@@ -420,10 +420,7 @@ def main(win):
                         current_piece.rotation = best_move.rotation
                         current_piece.x = best_move.x
                         current_piece.y = best_move.y
-                        current_piece.y += 1
-                        if not(valid_space(current_piece, grid)) and current_piece.y > 0:
-                            current_piece.y -= 1
-                            change_piece = True
+                        change_piece = True
 
         shape_pos = convert_shape_format(current_piece)
 
