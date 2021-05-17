@@ -409,14 +409,21 @@ def main(win):
                     current_piece.y = 4
                 if event.key == pygame.K_a:
                     moves = ai(current_piece, next_piece, grid)
-                    best_move = moves.pop(0)
-                    current_piece.rotation = best_move.rotation
-                    current_piece.x = best_move.x
-                    current_piece.y = best_move.y
-                    current_piece.y += 1
-                    if not(valid_space(current_piece, grid)) and current_piece.y > 0:
-                        current_piece.y -= 1
-                        change_piece = True
+                    if (len(moves) == 0):
+                        draw_text_middle(win, "Game Over", 80, (255, 255, 255))
+                        pygame.display.update()
+                        pygame.time.delay(1500)
+                        run = False
+                        update_score(score)
+                    else:
+                        best_move = moves.pop(0)
+                        current_piece.rotation = best_move.rotation
+                        current_piece.x = best_move.x
+                        current_piece.y = best_move.y
+                        current_piece.y += 1
+                        if not(valid_space(current_piece, grid)) and current_piece.y > 0:
+                            current_piece.y -= 1
+                            change_piece = True
 
         shape_pos = convert_shape_format(current_piece)
 
@@ -476,9 +483,9 @@ def heur_height(current_piece):
     height = sorted(shape, key=lambda x: x[1])
     max_height = height[0]
     if (max_height[1] > 10):
-        return max_height[1] * -2
+        return (20 - max_height[1]) * -2
     else:
-        return max_height[1] * -5
+        return (20 - max_height[1]) * -5
 
 
 def heur_gaps(current_piece, grid):
@@ -487,13 +494,16 @@ def heur_gaps(current_piece, grid):
     accepted_pos = [[(j, i) for j in range(10) if grid[i]
                     [j] == (0, 0, 0)] for i in range(20)]
     accepted_pos = [j for sub in accepted_pos for j in sub]
+    x_list = []
     for (j, i) in shape:
         y = i+1
-        while (y < 19):
-            if (j, y) in accepted_pos:
-                gap += 1
-            y += 1
-    return gap * -5
+        if not(j in x_list):
+            x_list.append(j)
+            while (y < 19):
+                if (j, y) in accepted_pos and not((j, y) in shape):
+                    gap += 1
+                y += 1
+    return gap * -20
 
 
 def heur_rows(current_piece, grid):
@@ -503,7 +513,7 @@ def heur_rows(current_piece, grid):
     for pos in shape_pos:
         p = (pos[0], pos[1])
         locked_positions[p] = current_piece.color
-    return clear_rows(grid_temp, locked_positions)
+    return clear_rows(grid_temp, locked_positions) * 10
 
 
 def ai(current_piece, next_piece, grid):
