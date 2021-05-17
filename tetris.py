@@ -273,20 +273,20 @@ def draw_next_shape(shape, surface):
 def update_score(nscore):
     score = max_score()
 
-#    f = open('scores.txt', 'w')
-#    if int(score) > nscore:
-#        f.write(str(score))
-#    else:
-#        f.write(str(nscore))
+    f = open('scores.txt', 'w')
+    if int(score) > nscore:
+        f.write(str(score))
+    else:
+        f.write(str(nscore))
 
 
 # Read the high score from the text document
 def max_score():
-#    f = open('scores.txt', 'r')
-#    lines = f.readlines()
-#    score = lines[0].strip()
+    f = open('scores.txt', 'r')
+    lines = f.readlines()
+    score = lines[0].strip()
 
-    return '0'
+    return score
 
 
 # Displays the game window
