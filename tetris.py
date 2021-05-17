@@ -1,5 +1,6 @@
 import pygame
 import random
+import bisect
 
 pygame.font.init()
 
@@ -272,18 +273,18 @@ def draw_next_shape(shape, surface):
 def update_score(nscore):
     score = max_score()
 
-    f = open('scores.txt', 'w')
-    if int(score) > nscore:
-        f.write(str(score))
-    else:
-        f.write(str(nscore))
+#    f = open('scores.txt', 'w')
+#    if int(score) > nscore:
+#        f.write(str(score))
+#    else:
+#        f.write(str(nscore))
 
 
 # Read the high score from the text document
 def max_score():
-    f = open('scores.txt', 'r')
-    lines = f.readlines()
-    score = lines[0].strip()
+#    f = open('scores.txt', 'r')
+#    lines = f.readlines()
+#    score = lines[0].strip()
 
     return '0'
 
@@ -389,8 +390,9 @@ def main(win):
                         current_piece.x -= 1
                 if event.key == pygame.K_DOWN:
                     current_piece.y += 1
-                    if not(valid_space(current_piece, grid)):
+                    if not(valid_space(current_piece, grid)) and current_piece.y > 0:
                         current_piece.y -= 1
+                        change_piece = True
                 if event.key == pygame.K_UP:
                     current_piece.rotation += 1
                     if not(valid_space(current_piece, grid)):
@@ -399,9 +401,15 @@ def main(win):
                 if event.key == pygame.K_SPACE:
                     while (valid_space(current_piece, grid)):
                         current_piece.y += 1
-                    if not(valid_space(current_piece, grid)):
+                    if not(valid_space(current_piece, grid)) and current_piece.y > 0:
                         current_piece.y -= 1
-
+                        change_piece = True
+                if event.key == pygame.K_a:
+                    moves = ai(current_piece, next_piece, grid)
+                    move = moves[0]
+                    current_piece.rotation = move.rotation
+                    current_piece.y = move.y
+                    current_piece.x = move.x
         shape_pos = convert_shape_format(current_piece)
 
         for i in range(len(shape_pos)):
@@ -444,6 +452,74 @@ def main_menu(win):
                 main(win)
 
     pygame.display.quit()
+
+
+class Move (object):
+    def __init__(self, x, y, shape, rotation, value):
+        self.shape = shape
+        self.x = x
+        self.y = y
+        self.rotation = rotation
+        self.value = value
+
+
+def heur_height(current_piece):
+    shape = convert_shape_format(current_piece)
+    height = sorted(shape, key=lambda x: x[1])
+    max_height = height[0]
+    if (max_height > 10):
+        return max_height * -2
+    else:
+        return max_height * -5
+
+
+def heur_gaps(current_piece, grid):
+    gap = 0
+    shape = convert_shape_format(current_piece)
+    accepted_pos = [[(j, i) for j in range(10) if grid[i]
+                    [j] == (0, 0, 0)] for i in range(20)]
+    accepted_pos = [j for sub in accepted_pos for j in sub]
+    for (j, i) in shape:
+        y = i
+        while (y < 19):
+            if (j, y) in accepted_pos:
+                gap += 1
+            y += 1
+    return gap * -5
+
+
+def heur_rows(current_piece, grid):
+    grid_temp = grid
+    shape_pos = convert_shape_format(current_piece)
+    locked_positions = {}
+    for pos in shape_pos:
+        p = (pos[0], pos[1])
+        locked_positions[p] = current_piece.color
+    return clear_rows(grid_temp, locked_positions)
+
+
+def ai(current_piece, next_piece, grid):
+    moves = []
+    rotation = len(current_piece.shape)
+    while (rotation > 0):
+        while (valid_space(current_piece, grid)):
+            current_piece.x -= 1
+        while (valid_space(current_piece, grid)):
+            current_piece.x += 1
+            while (valid_space(current_piece, grid)):
+                current_piece.y += 1
+            if not(valid_space(current_piece, grid)):
+                current_piece.y -= 1
+            value = heur_height(current_piece) + heur_gaps(current_piece, grid)
+            + heur_rows(current_piece, grid)
+            move = Move(current_piece.shape, current_piece.x, current_piece.y,
+                        current_piece.rotation, value)
+            move.append(move)
+            moves.sort(move.value, True)
+            current_piece.y = 0
+        rotation -= 1
+        current_piece.rotation += 1
+    return moves
 
 
 win = pygame.display.set_mode((scene_width, scene_height))
