@@ -156,13 +156,14 @@ def create_grid(locked_pos={}):
 # Manages the rotation of the pieces
 def convert_shape_format(shape):
     positions = []
-    formatshape = shape.shape[shape.rotation % len(shape.shape)]
+    format = shape.shape[shape.rotation % len(shape.shape)]
 
-    for i, line in enumerate(formatshape):
+    for i, line in enumerate(format):
         row = list(line)
         for j, column in enumerate(row):
             if column == '0':
-                positions.append((shape.x + j, shape.y + i))
+                temp = (shape.x + j, shape.y + i)
+                positions.append(temp)
 
     for i, pos in enumerate(positions):
         positions[i] = (pos[0] - 2, pos[1] - 4)
@@ -410,8 +411,9 @@ def main(win):
                     moves = ai(current_piece, next_piece, grid)
                     best_move = moves.pop(0)
                     current_piece.rotation = best_move.rotation
-                    current_piece.y = best_move.y
                     current_piece.x = best_move.x
+                    current_piece.y = best_move.y
+
         shape_pos = convert_shape_format(current_piece)
 
         for i in range(len(shape_pos)):
@@ -519,16 +521,17 @@ def ai(current_piece, next_piece, grid):
         #Heuristics
         value = heur_height(current_piece) + heur_gaps(current_piece, grid)
         + heur_rows(current_piece, grid)
-        new_move = Move(current_piece.shape, current_piece.x, current_piece.y,
-                    current_piece.rotation, value)
+        new_move = Move(current_piece.x, current_piece.y,
+                    current_piece.shape, current_piece.rotation, value)
         moves.append(new_move)
-        #moves.sort(move.value, True)
+        #moves.sort(new_move.value, True)
         print('yo')
         current_piece.y = 4
         current_piece.x += 1
     #    num_of_rotation -= 1
     #    current_piece.rotation += 1
-    return moves
+    sort_moves = sorted(moves, key=lambda x: x.value)
+    return sort_moves
 
 
 win = pygame.display.set_mode((scene_width, scene_height))
