@@ -1,6 +1,9 @@
 import pygame
 import random
-import bisect
+
+import os
+
+print(os.getcwd())
 
 pygame.font.init()
 
@@ -273,7 +276,6 @@ def draw_next_shape(shape, surface):
 # Write the end score in the text document if it is highest
 def update_score(nscore):
     score = max_score()
-
     with open('scores.txt', 'w') as f:
         if int(score) > nscore:
             f.write(str(score))
@@ -285,12 +287,13 @@ def update_score(nscore):
 def max_score():
     with open('scores.txt', 'r') as f:
         lines = f.readlines()
-        if len(lines)>=1:
+        if len(lines) >= 1:
             score = lines[0].strip()
             return score
         else:
             return '0'
     # return '0'
+
 
 # Displays the game window
 def draw_window(surface, grid, score=0, last_score=0):
@@ -337,6 +340,8 @@ def main(win):
     locked_positions = {}
     # Trigger for depth 1 heuristic
     auto = False
+    auto2 = False
+    tik = 0
     change_piece = False
     run = True
     current_piece = get_shape()
@@ -381,6 +386,46 @@ def main(win):
                 current_piece.x = best_move.x
                 current_piece.y = best_move.y
                 change_piece = True
+
+        if auto2:
+            moves = depth1_ai(current_piece, next_piece, grid, locked_positions)
+            if tik < 10:
+                tik += 1
+                if (len(moves) == 0):
+                    draw_text_middle(win, "Game Over", 80, (255, 255, 255))
+                    pygame.display.update()
+                    pygame.time.delay(1500)
+                    run = False
+                    update_score(score)
+                else:
+                    best_move = moves.pop(0)
+                    current_piece.rotation = best_move.rotation
+                    current_piece.x = best_move.x
+                    current_piece.y = best_move.y
+                    change_piece = True
+            else:
+                tik = 0
+                moves = depth1_ai(current_piece, next_piece, grid, locked_positions)
+                if (len(moves) == 0):
+                    draw_text_middle(win, "Game Over", 80, (255, 255, 255))
+                    pygame.display.update()
+                    pygame.time.delay(1500)
+                    run = False
+                    update_score(score)
+                else:
+                    depth_moves = depth2_ai(moves,current_piece, next_piece, grid, locked_positions)
+                    if (len(depth_moves) == 0):
+                        draw_text_middle(win, "Game Over", 80, (255, 255, 255))
+                        pygame.display.update()
+                        pygame.time.delay(1500)
+                        run = False
+                        update_score(score)
+                    else:
+                        best_move = depth_moves.pop(0)
+                        current_piece.rotation = best_move.rotation
+                        current_piece.x = best_move.x
+                        current_piece.y = best_move.y
+                        change_piece = True
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -455,6 +500,11 @@ def main(win):
                             current_piece.x = best_move.x
                             current_piece.y = best_move.y
                             change_piece = True
+                if event.key == pygame.K_x:
+                    if auto2:
+                        auto2 = False
+                    else:
+                        auto2 = True
 
         shape_pos = convert_shape_format(current_piece)
 
@@ -621,7 +671,7 @@ def depth1_ai(current_piece, next_piece, grid, locked_positions):
 
 def depth2_ai(moves, current_piece, next_piece, grid, locked_positions):
     depth_moves = []
-    for move in moves:
+    for move in moves[:10]:
         current_piece.rotation = move.rotation
         current_piece.x = move.x
         current_piece.y = move.y
