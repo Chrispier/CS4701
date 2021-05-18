@@ -326,6 +326,11 @@ def draw_window(surface, grid, score=0, last_score=0):
 
     surface.blit(label, (sx, sy))
 
+    label = font.render(str(last_score), 1, (255, 255, 255))
+    sx = top_left_x - 180
+    sy = top_left_y + play_height/2 - 90
+    surface.blit(label, (sx, sy))
+
     for i in range(len(grid)):
         for j in range(len(grid[i])):
             pygame.draw.rect(surface, grid[i][j], (top_left_x + j*block_size,
@@ -568,9 +573,9 @@ def heur_height(current_piece):
     height = sorted(shape_pos, key=lambda x: x[1])
     max_height = height[0]
     if (20 - max_height[1]) < 10:
-        return (20 - max_height[1]) * -10
+        return (20 - max_height[1]) * -40
     else:
-        return (20 - max_height[1]) * -10
+        return (20 - max_height[1]) * -40
 
 
 def heur_gaps(current_piece, grid):
@@ -699,7 +704,7 @@ def depth2_ai(moves, current_piece, next_piece, grid, locked_positions):
                     next_piece.y += 1
                 if not(valid_space(next_piece, grid_temp)):
                     next_piece.y -= 1
-                next_value = -1 * (heur_bump(next_piece,grid_temp) + heur_height(next_piece) + heur_rows(next_piece, grid_temp) + heur_gaps(next_piece, grid_temp))
+                next_value = -1 * (heur_bump(next_piece,grid_temp) + heur_height(next_piece) * 5 + heur_rows(next_piece, grid_temp) + heur_gaps(next_piece, grid_temp))
                 total_value = next_value + move.value * 2
                 new_move = Move(move.x, move.y, move.shape, move.rotation, total_value, move.piece)
                 depth_moves.append(new_move)
