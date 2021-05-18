@@ -1,8 +1,6 @@
 import pygame
 import random
 
-import os
-
 pygame.font.init()
 
 # Global Variables
@@ -347,7 +345,7 @@ def main(win):
     last_score = max_score()
     locked_positions = {}
     # Trigger for depth 1 heuristic
-    auto = True
+    auto = False
     auto2 = False
     tik = 0
     change_piece = False
@@ -469,6 +467,10 @@ def main(win):
                 if event.key == pygame.K_a:
                     moves = depth1_ai(current_piece, next_piece, grid, locked_positions)
                     if (len(moves) == 0):
+                        while (valid_space(current_piece, grid)):
+                            current_piece.y += 1
+                        if not(valid_space(current_piece, grid)) and current_piece.y > 0:
+                            current_piece.y -= 1
                         draw_text_middle(win, "Game Over", 80, (255, 255, 255))
                         pygame.display.update()
                         pygame.time.delay(1500)
@@ -488,6 +490,10 @@ def main(win):
                 if event.key == pygame.K_s:
                     moves = depth1_ai(current_piece, next_piece, grid, locked_positions)
                     if (len(moves) == 0):
+                        while (valid_space(current_piece, grid)):
+                            current_piece.y += 1
+                        if not(valid_space(current_piece, grid)) and current_piece.y > 0:
+                            current_piece.y -= 1
                         draw_text_middle(win, "Game Over", 80, (255, 255, 255))
                         pygame.display.update()
                         pygame.time.delay(1500)
@@ -496,6 +502,10 @@ def main(win):
                     else:
                         depth_moves = depth2_ai(moves,current_piece, next_piece, grid, locked_positions)
                         if (len(depth_moves) == 0):
+                            while (valid_space(current_piece, grid)):
+                                current_piece.y += 1
+                            if not(valid_space(current_piece, grid)) and current_piece.y > 0:
+                                current_piece.y -= 1
                             draw_text_middle(win, "Game Over", 80, (255, 255, 255))
                             pygame.display.update()
                             pygame.time.delay(1500)
@@ -547,7 +557,7 @@ def main_menu(win):
     while run:
         win.fill((0, 0, 0))
         draw_text_middle(win, 'Press Any Key To Play', 60, (255, 255, 255))
-        main(win)
+        #main(win)
         pygame.display.update()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -557,7 +567,7 @@ def main_menu(win):
 
     pygame.display.quit()
 
-
+# Data structure that stores the move a specific piece can make and the value it has
 class Move (object):
     def __init__(self, x, y, shape, rotation, value, piece):
         self.shape = shape
@@ -568,29 +578,39 @@ class Move (object):
         self.piece = piece
 
 
+# Heuristic helper function to calculate the maximum height of the current piece at the move
 def heur_height(current_piece):
+    # Convert the shape into relative coordinates
     shape_pos = convert_shape_format(current_piece)
+    # Sort by height, the tallest piece is at the head
     height = sorted(shape_pos, key=lambda x: x[1])
     max_height = height[0]
+    # Return a score based on the height
     if (20 - max_height[1]) < 10:
-        return (20 - max_height[1]) * -40
+        return (20 - max_height[1]) * -10
     else:
-        return (20 - max_height[1]) * -40
+        return (20 - max_height[1]) * -10
 
 
+# Heuristic helper function to calculate the gaps created by this move
 def heur_gaps(current_piece, grid):
     gap = 0
+    # Convert the shape into relative coordinates
     shape_pos = convert_shape_format(current_piece)
+    # Create list of all empty spaces
     accepted_pos = [[(j, i) for j in range(10) if grid[i]
                     [j] == (0, 0, 0)] for i in range(20)]
     accepted_pos = [j for sub in accepted_pos for j in sub]
+    # List to keep track of already checked columns
     x_list = []
     shape_pos = sorted(shape_pos, key=lambda x: x[1])
+    # Go through all blocks of the tetronimo
     for (j, i) in shape_pos:
         y = i
         if not(j in x_list):
             x_list.append(j)
             while (y < 20):
+                # IF this space is empty and not a part of the piece, its a gap
                 if (j, y) in accepted_pos and (j, y) not in shape_pos:
                     gap += 1
                 if (j, y) not in accepted_pos:
@@ -599,14 +619,19 @@ def heur_gaps(current_piece, grid):
     return gap * -50
 
 
+# Heuristic helper function to calculate amount of full lines made
 def heur_rows(current_piece, grid):
+    # Convert the shape into relative coordinates
     shape_pos = convert_shape_format(current_piece)
+    # Create a new grid to prevent any changes made to game grid
     grid_temp = grid
+    # Add the piece to the grid
     for i in range(len(shape_pos)):
         x, y = shape_pos[i]
         if y > -1:
             grid_temp[y][x] = (current_piece.color)
     inc = 0
+    # If there is a row without any empty spaces, it is a full row
     for i in range(len(grid_temp)-1, -1, -1):
         row = grid_temp[i]
         if (0, 0, 0) not in row:
@@ -615,19 +640,25 @@ def heur_rows(current_piece, grid):
         x, y = shape_pos[i]
         if y > -1:
             grid_temp[y][x] = (0, 0, 0)
+    # Revert grid back to original
     grid_temp = grid
     return inc * 190
 
 
+# Heuristic helper function to calculate amount of bumps made by the piece
 def heur_bump(current_piece, grid):
+    # Convert the shape into relative coordinates
     shape_pos = convert_shape_format(current_piece)
     shape_pos = sorted(shape_pos, key=lambda x: x[1])
+    # Create list of all empty spaces
     accepted_pos = [[(j, i) for j in range(10) if grid[i]
                     [j] == (0, 0, 0)] for i in range(20)]
     block_pos = [j for sub in accepted_pos for j in sub]
     block_pos = sorted(block_pos, key=lambda x: x[1])
     x_list = []
     bump = 0
+    # If the piece creates makes the grid have a >2 high difference between columns, that is a bump
+    # If the piece is by the wall, that is also negative
     for (j, i) in shape_pos:
         if not(j in x_list):
             x_list.append(j)
@@ -644,12 +675,14 @@ def heur_bump(current_piece, grid):
     return bump * -20
 
 
+# Calculate best move for current piece
 def depth1_ai(current_piece, next_piece, grid, locked_positions):
     moves = []
+    # Move the piece to a valid location
     current_piece.y = 4
     current_piece.rotation = 0
     num_of_rotation = len(current_piece.shape)
-
+    # Check every rotation
     while (num_of_rotation >= 0):
         # goes all the way to the left
         while (valid_space(current_piece, grid)):
@@ -662,21 +695,26 @@ def depth1_ai(current_piece, next_piece, grid, locked_positions):
                 current_piece.y += 1
             if not(valid_space(current_piece, grid)):
                 current_piece.y -= 1
-            current_value = -1 * (heur_bump(current_piece,grid) + heur_height(current_piece) + heur_rows(current_piece, grid) + heur_gaps(current_piece, grid))
+            # Heuristics
+            current_value = -1 * (heur_bump(current_piece,grid) + 25 * heur_height(current_piece) + 4 * heur_rows(current_piece, grid) + 5 * heur_gaps(current_piece, grid))
             new_move = Move(current_piece.x, current_piece.y, current_piece.shape, current_piece.rotation, current_value, current_piece)
             moves.append(new_move)
+            # Reset the height and move the piece over to the right
             current_piece.y = 4
             current_piece.x += 1
+        # Reset X and Y values and rotate the piece
         num_of_rotation -= 1
         current_piece.y = 4
         current_piece.x = 4
         current_piece.rotation += 1
         if not(valid_space(current_piece, grid)):
             current_piece.rotation -= 1
+    # Sort moves based on the value
     sort_moves = sorted(moves, key=lambda x: x.value)
     return sort_moves
 
 
+# Calculate best move for current piece while considering the next piece
 def depth2_ai(moves, current_piece, next_piece, grid, locked_positions):
     depth_moves = []
     for move in moves[:10]:
@@ -704,7 +742,7 @@ def depth2_ai(moves, current_piece, next_piece, grid, locked_positions):
                     next_piece.y += 1
                 if not(valid_space(next_piece, grid_temp)):
                     next_piece.y -= 1
-                next_value = -1 * (heur_bump(next_piece,grid_temp) + heur_height(next_piece) * 5 + heur_rows(next_piece, grid_temp) + heur_gaps(next_piece, grid_temp))
+                next_value = -1 * (heur_bump(next_piece,grid_temp) + heur_height(next_piece) * 5 +  heur_gaps(next_piece, grid_temp))
                 total_value = next_value + move.value * 2
                 new_move = Move(move.x, move.y, move.shape, move.rotation, total_value, move.piece)
                 depth_moves.append(new_move)
