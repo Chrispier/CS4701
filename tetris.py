@@ -273,25 +273,25 @@ def draw_next_shape(shape, surface):
 
 # Write the end score in the text document if it is highest
 def update_score(nscore):
-   score = max_score()
-#    with open('scores.txt', 'w') as f:
-#        if int(score) > nscore:
-#            f.write(str(score))
-#        else:
-#            f.write(str(nscore))
-#
+    score = max_score()
+
+    with open('scores.txt', 'w') as f:
+        if int(score) > nscore:
+            f.write(str(score))
+        else:
+            f.write(str(nscore))
+
 
 # Read the high score from the text document
 def max_score():
-#    with open('scores.txt', 'r') as f:
-#        lines = f.readlines()
-#        if len(lines) >= 1:
-#            score = lines[0].strip()
-#            return score
-#        else:
+    with open('scores.txt', 'r') as f:
+        lines = f.readlines()
+        if len(lines) >= 1:
+           score = lines[0].strip()
+           return score
+        else:
             return '0'
     # return '0'
-
 
 # Displays the game window
 def draw_window(surface, grid, score=0, last_score=0):
@@ -300,7 +300,7 @@ def draw_window(surface, grid, score=0, last_score=0):
 
     pygame.font.init()
     font = pygame.font.SysFont('arial', 60)
-    label = font.render('CS 4701', 1, (255, 255, 255))
+    label = font.render('CS 4701: Tetris', 1, (255, 255, 255))
 
     surface.blit(label, (top_left_x + play_width /
                          2 - (label.get_width() / 2), 30))
