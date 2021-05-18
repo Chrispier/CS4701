@@ -335,7 +335,8 @@ def draw_window(surface, grid, score=0, last_score=0):
 def main(win):
     last_score = max_score()
     locked_positions = {}
-
+    # Trigger for depth 1 heuristic
+    auto = False
     change_piece = False
     run = True
     current_piece = get_shape()
@@ -358,7 +359,6 @@ def main(win):
             if level_time > 0.12:
                 level_time -= 0.005
 
-
         if fall_time/1000 > fall_speed:
             fall_time = 0
             temp = True
@@ -367,15 +367,20 @@ def main(win):
                 current_piece.y -= 1
                 change_piece = True
 
-        #if temp:
-        #    a_left = pygame.event.Event(pygame.KEYDOWN, unicode = "left",key = pygame.K_LEFT, mod=pygame.KMOD_NONE)
-        #    pygame.event.post(a_left)
-        #    a_rotate = pygame.event.Event(pygame.KEYDOWN, unicode = "up",key = pygame.K_UP, mod=pygame.KMOD_NONE)
-        #    pygame.event.post(a_rotate)
-            #current_piece.x -= 1
-            #if not(valid_space(current_piece, grid)):
-            #    current_piece.x += 1
-        #    temp = False
+        if auto:
+            moves = depth1_ai(current_piece, next_piece, grid, locked_positions)
+            if (len(moves) == 0):
+                draw_text_middle(win, "Game Over", 80, (255, 255, 255))
+                pygame.display.update()
+                pygame.time.delay(1500)
+                run = False
+                update_score(score)
+            else:
+                best_move = moves.pop(0)
+                current_piece.rotation = best_move.rotation
+                current_piece.x = best_move.x
+                current_piece.y = best_move.y
+                change_piece = True
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -410,7 +415,7 @@ def main(win):
                 if event.key == pygame.K_s:
                     current_piece.y = 4
                 if event.key == pygame.K_a:
-                    moves = ai(current_piece, next_piece, grid, locked_positions)
+                    moves = depth1_ai(current_piece, next_piece, grid, locked_positions)
                     if (len(moves) == 0):
                         draw_text_middle(win, "Game Over", 80, (255, 255, 255))
                         pygame.display.update()
@@ -423,6 +428,33 @@ def main(win):
                         current_piece.x = best_move.x
                         current_piece.y = best_move.y
                         change_piece = True
+                if event.key == pygame.K_z:
+                    if auto:
+                        auto = False
+                    else:
+                        auto = True
+                if event.key == pygame.K_s:
+                    moves = depth1_ai(current_piece, next_piece, grid, locked_positions)
+                    if (len(moves) == 0):
+                        draw_text_middle(win, "Game Over", 80, (255, 255, 255))
+                        pygame.display.update()
+                        pygame.time.delay(1500)
+                        run = False
+                        update_score(score)
+                    else:
+                        depth_moves = depth2_ai(moves,current_piece, next_piece, grid, locked_positions)
+                        if (len(depth_moves) == 0):
+                            draw_text_middle(win, "Game Over", 80, (255, 255, 255))
+                            pygame.display.update()
+                            pygame.time.delay(1500)
+                            run = False
+                            update_score(score)
+                        else:
+                            best_move = depth_moves.pop(0)
+                            current_piece.rotation = best_move.rotation
+                            current_piece.x = best_move.x
+                            current_piece.y = best_move.y
+                            change_piece = True
 
         shape_pos = convert_shape_format(current_piece)
 
@@ -469,12 +501,13 @@ def main_menu(win):
 
 
 class Move (object):
-    def __init__(self, x, y, shape, rotation, value):
+    def __init__(self, x, y, shape, rotation, value, piece):
         self.shape = shape
         self.x = x
         self.y = y
         self.rotation = rotation
         self.value = value
+        self.piece = piece
 
 
 def heur_height(current_piece):
@@ -504,17 +537,16 @@ def heur_gaps(current_piece, grid):
                 if (j, y) not in accepted_pos:
                     break
                 y += 1
-    print(gap)
     return gap * -40
 
 
-def heur_rows(current_piece, grid, locked1):
+def heur_rows(current_piece, grid):
     shape_pos = convert_shape_format(current_piece)
     grid_temp = grid
     for i in range(len(shape_pos)):
         x, y = shape_pos[i]
         if y > -1:
-            grid_temp[y][x] = current_piece.color
+            grid_temp[y][x] = (current_piece.color)
     inc = 0
     for i in range(len(grid_temp)-1, -1, -1):
         row = grid_temp[i]
@@ -549,7 +581,7 @@ def heur_bump(current_piece, grid):
     return bump * -30
 
 
-def ai(current_piece, next_piece, grid, locked_positions):
+def depth1_ai(current_piece, next_piece, grid, locked_positions):
     moves = []
     current_piece.y = 4
     current_piece.rotation = 0
@@ -570,17 +602,10 @@ def ai(current_piece, next_piece, grid, locked_positions):
                 current_piece.y += 1
             if not(valid_space(current_piece, grid)):
                 current_piece.y -= 1
+            current_value = -1 * (heur_bump(current_piece,grid) + heur_height(current_piece) + heur_rows(current_piece, grid) + heur_gaps(current_piece, grid))
 
-            current_value = -1 * (heur_bump(current_piece,grid) + heur_height(current_piece) + heur_rows(current_piece, grid, locked_positions) + heur_gaps(current_piece, grid))
-            new_move = Move(current_piece.x, current_piece.y, current_piece.shape, current_piece.rotation, current_value)
+            new_move = Move(current_piece.x, current_piece.y, current_piece.shape, current_piece.rotation, current_value, current_piece)
             moves.append(new_move)
-        #        num_of_next_rotation -= 1
-        #        next_piece.y = 4
-        #        next_piece.x = 4
-        #        next_piece.rotation += 1
-        #        if not(valid_space(next_piece, next_grid)):
-        #            next_piece.rotation -= 1
-
             current_piece.y = 4
             current_piece.x += 1
         num_of_rotation -= 1
@@ -591,6 +616,54 @@ def ai(current_piece, next_piece, grid, locked_positions):
             current_piece.rotation -= 1
     sort_moves = sorted(moves, key=lambda x: x.value)
     print('YO')
+    return sort_moves
+
+
+def depth2_ai(moves, current_piece, next_piece, grid, locked_positions):
+    depth_moves = []
+    for move in moves:
+        current_piece.rotation = move.rotation
+        current_piece.x = move.x
+        current_piece.y = move.y
+        shape_pos = convert_shape_format(current_piece)
+        grid_temp = grid
+        for i in range(len(shape_pos)):
+            x, y = shape_pos[i]
+            if y > -1:
+                grid_temp[y][x] = (0, 0, 1)
+        next_piece.y = 4
+        next_piece.rotation = 0
+        num_of_next_rotation = len(next_piece.shape)
+        while (num_of_next_rotation >= 0):
+            # goes all the way to the left
+            while (valid_space(next_piece, grid_temp)):
+                next_piece.x -= 1
+            next_piece.x += 1
+            # goes one block at a time to the right
+            while (valid_space(next_piece, grid_temp)):
+                print(num_of_next_rotation)
+                # drops piece to the bottom
+                while (valid_space(next_piece, grid_temp)):
+                    next_piece.y += 1
+                if not(valid_space(next_piece, grid_temp)):
+                    next_piece.y -= 1
+                next_value = -1 * (heur_bump(next_piece,grid_temp) + heur_height(next_piece) + heur_rows(next_piece, grid_temp) + heur_gaps(next_piece, grid_temp))
+                total_value = next_value + move.value * 2
+                new_move = Move(move.x, move.y, move.shape, move.rotation, total_value, move.piece)
+                depth_moves.append(new_move)
+                next_piece.y = 4
+                next_piece.x += 1
+            num_of_next_rotation -= 1
+            next_piece.y = 4
+            next_piece.x = 4
+            next_piece.rotation += 1
+            if not(valid_space(next_piece, grid)):
+                next_piece.rotation -= 1
+        grid_temp = grid
+    current_piece.rotation = 0
+    current_piece.x = 4
+    current_piece.y = 4
+    sort_moves = sorted(depth_moves, key=lambda x: x.value)
     return sort_moves
 
 
