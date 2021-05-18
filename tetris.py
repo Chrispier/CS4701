@@ -476,31 +476,29 @@ class Move (object):
 
 
 def heur_height(current_piece):
-    shape = convert_shape_format(current_piece)
-    height = sorted(shape, key=lambda x: x[1])
+    shape_pos = convert_shape_format(current_piece)
+    height = sorted(shape_pos, key=lambda x: x[1])
     max_height = height[0]
-    if (max_height[1] > 10):
-        return (20 - max_height[1]) * -2
-    else:
-        return (20 - max_height[1]) * -5
+
+    return (20 - max_height[1]) * -10
 
 
 def heur_gaps(current_piece, grid):
     gap = 0
-    shape = convert_shape_format(current_piece)
+    shape_pos = convert_shape_format(current_piece)
     accepted_pos = [[(j, i) for j in range(10) if grid[i]
                     [j] == (0, 0, 0)] for i in range(20)]
     accepted_pos = [j for sub in accepted_pos for j in sub]
     x_list = []
-    for (j, i) in shape:
+    for (j, i) in shape_pos:
         y = i+1
         if not(j in x_list):
             x_list.append(j)
             while (y < 19):
-                if (j, y) in accepted_pos and not((j, y) in shape):
+                if (j, y) in accepted_pos and not((j, y) in shape_pos):
                     gap += 1
                 y += 1
-    return gap * -25
+    return gap * -15
 
 
 def heur_rows(current_piece, grid):
@@ -510,7 +508,27 @@ def heur_rows(current_piece, grid):
     for pos in shape_pos:
         p = (pos[0], pos[1])
         locked_positions[p] = current_piece.color
-    return clear_rows(grid_temp, locked_positions) * 30
+    return clear_rows(grid_temp, locked_positions) * 50
+
+
+def heur_bump(current_piece, grid):
+    shape_pos = convert_shape_format(current_piece)
+    shape_pos = sorted(shape_pos, key=lambda x: x[1])
+    accepted_pos = [[(j, i) for j in range(10) if grid[i]
+                    [j] == (0, 0, 0)] for i in range(20)]
+    block_pos = [j for sub in accepted_pos for j in sub]
+    #block_pos.extend(shape_pos)
+    block_pos = sorted(block_pos, key=lambda x: x[1])
+    x_list = []
+    bump = 0
+    for (j, i) in shape_pos:
+        if not(j in x_list):
+            x_list.append(j)
+            if (j-1, i-1) in block_pos and (j-1, i) in block_pos and not((j-1, i) in shape_pos) and not((j-1, i-1) in shape_pos):
+                bump += 1
+            if (j+1, i-1) in block_pos and (j+1, i) in block_pos and not((j+1, i) in shape_pos) and not((j+1, i-1) in shape_pos):
+                bump += 1
+    return bump * -20
 
 
 def ai(current_piece, next_piece, grid):
@@ -531,8 +549,7 @@ def ai(current_piece, next_piece, grid):
             if not(valid_space(current_piece, grid)):
                 current_piece.y -= 1
             #Heuristics
-            value = (heur_height(current_piece) + heur_gaps(current_piece, grid)
-            + heur_rows(current_piece, grid)) * -1
+            value = -1 * (heur_bump(current_piece,grid) + heur_height(current_piece) + heur_rows(current_piece, grid) + heur_gaps(current_piece, grid))
             new_move = Move(current_piece.x, current_piece.y,
                         current_piece.shape, current_piece.rotation, value)
             moves.append(new_move)
