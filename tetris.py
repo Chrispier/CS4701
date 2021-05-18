@@ -272,23 +272,25 @@ def draw_next_shape(shape, surface):
 
 # Write the end score in the text document if it is highest
 def update_score(nscore):
-    score = 0
+    score = max_score()
 
-#    f = open('scores.txt', 'w')
-#    if int(score) > nscore:
-#        f.write(str(score))
-#    else:
-#        f.write(str(nscore))
+    with open('scores.txt', 'w') as f:
+        if int(score) > nscore:
+            f.write(str(score))
+        else:
+            f.write(str(nscore))
 
 
 # Read the high score from the text document
 def max_score():
-#    f = open('scores.txt', 'r')
-#    lines = f.readlines()
-#    score = lines[0].strip()
-
-    return '0'
-
+    with open('scores.txt', 'r') as f:
+        lines = f.readlines()
+        if len(lines)>=1:
+            score = lines[0].strip()
+            return score
+        else:
+            return '0'
+    # return '0'
 
 # Displays the game window
 def draw_window(surface, grid, score=0, last_score=0):
@@ -311,7 +313,7 @@ def draw_window(surface, grid, score=0, last_score=0):
 
     surface.blit(label, (sx + 20, sy + 160))
     # High score
-    label = font.render('High Score: ' + last_score, 1, (255, 255, 255))
+    label = font.render('High Score: ' + str(last_score), 1, (255, 255, 255))
 
     sx = top_left_x - 240
     sy = top_left_y + 200
