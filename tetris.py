@@ -408,7 +408,7 @@ def main(win):
                 if event.key == pygame.K_s:
                     current_piece.y = 4
                 if event.key == pygame.K_a:
-                    moves = ai(current_piece, next_piece, grid)
+                    moves = ai(current_piece, next_piece, grid, locked_positions)
                     if (len(moves) == 0):
                         draw_text_middle(win, "Game Over", 80, (255, 255, 255))
                         pygame.display.update()
@@ -479,8 +479,10 @@ def heur_height(current_piece):
     shape_pos = convert_shape_format(current_piece)
     height = sorted(shape_pos, key=lambda x: x[1])
     max_height = height[0]
-
-    return (20 - max_height[1]) * -10
+    if (20 - max_height[1]) < 12:
+        return (20 - max_height[1]) * -10
+    else:
+        return (20 - max_height[1]) * -10
 
 
 def heur_gaps(current_piece, grid):
@@ -491,24 +493,37 @@ def heur_gaps(current_piece, grid):
     accepted_pos = [j for sub in accepted_pos for j in sub]
     x_list = []
     for (j, i) in shape_pos:
-        y = i+1
+        y = i
         if not(j in x_list):
             x_list.append(j)
-            while (y < 19):
-                if (j, y) in accepted_pos and not((j, y) in shape_pos):
+            while (y < 20):
+                if (j, y) in accepted_pos and (j, y) not in shape_pos:
                     gap += 1
+                if (j, y) not in accepted_pos:
+                    break
                 y += 1
-    return gap * -15
+    print(gap)
+    return gap * -40
 
 
-def heur_rows(current_piece, grid):
-    grid_temp = grid
+def heur_rows(current_piece, grid, locked1):
     shape_pos = convert_shape_format(current_piece)
-    locked_positions = {}
-    for pos in shape_pos:
-        p = (pos[0], pos[1])
-        locked_positions[p] = current_piece.color
-    return clear_rows(grid_temp, locked_positions) * 50
+    grid_temp = grid
+    for i in range(len(shape_pos)):
+        x, y = shape_pos[i]
+        if y > -1:
+            grid_temp[y][x] = current_piece.color
+    inc = 0
+    for i in range(len(grid_temp)-1, -1, -1):
+        row = grid_temp[i]
+        if (0, 0, 0) not in row:
+            inc += 1
+    for i in range(len(shape_pos)):
+        x, y = shape_pos[i]
+        if y > -1:
+            grid_temp[y][x] = (0, 0, 0)
+    grid_temp = grid
+    return inc * 200
 
 
 def heur_bump(current_piece, grid):
@@ -517,44 +532,53 @@ def heur_bump(current_piece, grid):
     accepted_pos = [[(j, i) for j in range(10) if grid[i]
                     [j] == (0, 0, 0)] for i in range(20)]
     block_pos = [j for sub in accepted_pos for j in sub]
-    #block_pos.extend(shape_pos)
     block_pos = sorted(block_pos, key=lambda x: x[1])
     x_list = []
     bump = 0
     for (j, i) in shape_pos:
         if not(j in x_list):
             x_list.append(j)
-            if (j-1, i-1) in block_pos and (j-1, i) in block_pos and not((j-1, i) in shape_pos) and not((j-1, i-1) in shape_pos):
-                bump += 1
-            if (j+1, i-1) in block_pos and (j+1, i) in block_pos and not((j+1, i) in shape_pos) and not((j+1, i-1) in shape_pos):
-                bump += 1
-    return bump * -20
+            if (j-1, i-1) in block_pos and (j-1, i) in block_pos:
+                if (j-1, i) not in shape_pos and (j-1, i-1) not in shape_pos:
+                    bump += 1
+            if (j+1, i-1) in block_pos and (j+1, i) in block_pos:
+                if (j+1, i) not in shape_pos and (j+1, i-1) in shape_pos:
+                    bump += 1
+    return bump * -30
 
 
-def ai(current_piece, next_piece, grid):
+def ai(current_piece, next_piece, grid, locked_positions):
     moves = []
     current_piece.y = 4
     current_piece.rotation = 0
     num_of_rotation = len(current_piece.shape)
+    next_piece.y = 4
+    next_piece.rotation = 0
+    num_of_next_rotation = len(next_piece.shape)
+
     while (num_of_rotation >= 0):
-        #goes all the way to the left
+        # goes all the way to the left
         while (valid_space(current_piece, grid)):
             current_piece.x -= 1
         current_piece.x += 1
-        #goes one block at a time to the right
+        # goes one block at a time to the right
         while (valid_space(current_piece, grid)):
-            #drops piece to the bottom
+            # drops piece to the bottom
             while (valid_space(current_piece, grid)):
                 current_piece.y += 1
             if not(valid_space(current_piece, grid)):
                 current_piece.y -= 1
-            #Heuristics
-            value = -1 * (heur_bump(current_piece,grid) + heur_height(current_piece) + heur_rows(current_piece, grid) + heur_gaps(current_piece, grid))
-            new_move = Move(current_piece.x, current_piece.y,
-                        current_piece.shape, current_piece.rotation, value)
+
+            current_value = -1 * (heur_bump(current_piece,grid) + heur_height(current_piece) + heur_rows(current_piece, grid, locked_positions) + heur_gaps(current_piece, grid))
+            new_move = Move(current_piece.x, current_piece.y, current_piece.shape, current_piece.rotation, current_value)
             moves.append(new_move)
-            #moves.sort(new_move.value, True)
-            print(current_piece.rotation)
+        #        num_of_next_rotation -= 1
+        #        next_piece.y = 4
+        #        next_piece.x = 4
+        #        next_piece.rotation += 1
+        #        if not(valid_space(next_piece, next_grid)):
+        #            next_piece.rotation -= 1
+
             current_piece.y = 4
             current_piece.x += 1
         num_of_rotation -= 1
