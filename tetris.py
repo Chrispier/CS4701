@@ -3,8 +3,6 @@ import random
 
 import os
 
-print(os.getcwd())
-
 pygame.font.init()
 
 # Global Variables
@@ -315,13 +313,13 @@ def draw_window(surface, grid, score=0, last_score=0):
     sy = top_left_y + play_height/2 - 100
 
     surface.blit(label, (sx + 20, sy + 160))
-    # High score
-    label = font.render('High Score: ' + str(last_score), 1, (255, 255, 255))
+    # High score label
+    label = font.render('High Score: ', 1, (255, 255, 255))
 
-    sx = top_left_x - 240
-    sy = top_left_y + 200
+    sx = top_left_x - 210
+    sy = top_left_y + play_height/2 - 130
 
-    surface.blit(label, (sx + 20, sy + 160))
+    surface.blit(label, (sx, sy))
 
     for i in range(len(grid)):
         for j in range(len(grid[i])):
@@ -641,9 +639,6 @@ def depth1_ai(current_piece, next_piece, grid, locked_positions):
     current_piece.y = 4
     current_piece.rotation = 0
     num_of_rotation = len(current_piece.shape)
-    next_piece.y = 4
-    next_piece.rotation = 0
-    num_of_next_rotation = len(next_piece.shape)
 
     while (num_of_rotation >= 0):
         # goes all the way to the left
