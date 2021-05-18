@@ -276,10 +276,7 @@ def draw_next_shape(shape, surface):
 # Write the end score in the text document if it is highest
 def update_score(nscore):
     score = max_score()
-<<<<<<< HEAD
 
-=======
->>>>>>> 46b8013a3fc2d9000ca20ca6429d4348a744260d
     with open('scores.txt', 'w') as f:
         if int(score) > nscore:
             f.write(str(score))
