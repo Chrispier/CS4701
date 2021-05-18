@@ -275,22 +275,22 @@ def draw_next_shape(shape, surface):
 
 # Write the end score in the text document if it is highest
 def update_score(nscore):
-    score = max_score()
-    with open('scores.txt', 'w') as f:
-        if int(score) > nscore:
-            f.write(str(score))
-        else:
-            f.write(str(nscore))
-
+   score = max_score()
+#    with open('scores.txt', 'w') as f:
+#        if int(score) > nscore:
+#            f.write(str(score))
+#        else:
+#            f.write(str(nscore))
+#
 
 # Read the high score from the text document
 def max_score():
-    with open('scores.txt', 'r') as f:
-        lines = f.readlines()
-        if len(lines) >= 1:
-            score = lines[0].strip()
-            return score
-        else:
+#    with open('scores.txt', 'r') as f:
+#        lines = f.readlines()
+#        if len(lines) >= 1:
+#            score = lines[0].strip()
+#            return score
+#        else:
             return '0'
     # return '0'
 
@@ -339,7 +339,7 @@ def main(win):
     last_score = max_score()
     locked_positions = {}
     # Trigger for depth 1 heuristic
-    auto = False
+    auto = True
     auto2 = False
     tik = 0
     change_piece = False
@@ -404,7 +404,6 @@ def main(win):
                     current_piece.y = best_move.y
                     change_piece = True
             else:
-                tik = 0
                 moves = depth1_ai(current_piece, next_piece, grid, locked_positions)
                 if (len(moves) == 0):
                     draw_text_middle(win, "Game Over", 80, (255, 255, 255))
@@ -529,7 +528,7 @@ def main(win):
         if check_lost(locked_positions):
             draw_text_middle(win, "Game Over", 80, (255, 255, 255))
             pygame.display.update()
-            pygame.time.delay(1500)
+            pygame.time.delay(3000)
             run = False
             update_score(score)
 
@@ -540,6 +539,7 @@ def main_menu(win):
     while run:
         win.fill((0, 0, 0))
         draw_text_middle(win, 'Press Any Key To Play', 60, (255, 255, 255))
+        main(win)
         pygame.display.update()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -564,7 +564,7 @@ def heur_height(current_piece):
     shape_pos = convert_shape_format(current_piece)
     height = sorted(shape_pos, key=lambda x: x[1])
     max_height = height[0]
-    if (20 - max_height[1]) < 12:
+    if (20 - max_height[1]) < 10:
         return (20 - max_height[1]) * -10
     else:
         return (20 - max_height[1]) * -10
@@ -577,6 +577,7 @@ def heur_gaps(current_piece, grid):
                     [j] == (0, 0, 0)] for i in range(20)]
     accepted_pos = [j for sub in accepted_pos for j in sub]
     x_list = []
+    shape_pos = sorted(shape_pos, key=lambda x: x[1])
     for (j, i) in shape_pos:
         y = i
         if not(j in x_list):
@@ -587,7 +588,7 @@ def heur_gaps(current_piece, grid):
                 if (j, y) not in accepted_pos:
                     break
                 y += 1
-    return gap * -40
+    return gap * -50
 
 
 def heur_rows(current_piece, grid):
@@ -607,7 +608,7 @@ def heur_rows(current_piece, grid):
         if y > -1:
             grid_temp[y][x] = (0, 0, 0)
     grid_temp = grid
-    return inc * 200
+    return inc * 190
 
 
 def heur_bump(current_piece, grid):
@@ -624,11 +625,15 @@ def heur_bump(current_piece, grid):
             x_list.append(j)
             if (j-1, i-1) in block_pos and (j-1, i) in block_pos:
                 if (j-1, i) not in shape_pos and (j-1, i-1) not in shape_pos:
-                    bump += 1
+                    bump += 2
             if (j+1, i-1) in block_pos and (j+1, i) in block_pos:
                 if (j+1, i) not in shape_pos and (j+1, i-1) in shape_pos:
-                    bump += 1
-    return bump * -30
+                    bump += 2
+            if (j+1 == 10):
+                bump += 1
+            if (j-1 == 0):
+                bump += 1
+    return bump * -20
 
 
 def depth1_ai(current_piece, next_piece, grid, locked_positions):
@@ -653,7 +658,6 @@ def depth1_ai(current_piece, next_piece, grid, locked_positions):
             if not(valid_space(current_piece, grid)):
                 current_piece.y -= 1
             current_value = -1 * (heur_bump(current_piece,grid) + heur_height(current_piece) + heur_rows(current_piece, grid) + heur_gaps(current_piece, grid))
-
             new_move = Move(current_piece.x, current_piece.y, current_piece.shape, current_piece.rotation, current_value, current_piece)
             moves.append(new_move)
             current_piece.y = 4
@@ -665,7 +669,6 @@ def depth1_ai(current_piece, next_piece, grid, locked_positions):
         if not(valid_space(current_piece, grid)):
             current_piece.rotation -= 1
     sort_moves = sorted(moves, key=lambda x: x.value)
-    print('YO')
     return sort_moves
 
 
@@ -691,7 +694,6 @@ def depth2_ai(moves, current_piece, next_piece, grid, locked_positions):
             next_piece.x += 1
             # goes one block at a time to the right
             while (valid_space(next_piece, grid_temp)):
-                print(num_of_next_rotation)
                 # drops piece to the bottom
                 while (valid_space(next_piece, grid_temp)):
                     next_piece.y += 1
