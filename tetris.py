@@ -641,9 +641,6 @@ def depth1_ai(current_piece, next_piece, grid, locked_positions):
     current_piece.y = 4
     current_piece.rotation = 0
     num_of_rotation = len(current_piece.shape)
-    next_piece.y = 4
-    next_piece.rotation = 0
-    num_of_next_rotation = len(next_piece.shape)
 
     while (num_of_rotation >= 0):
         # goes all the way to the left
@@ -657,7 +654,7 @@ def depth1_ai(current_piece, next_piece, grid, locked_positions):
                 current_piece.y += 1
             if not(valid_space(current_piece, grid)):
                 current_piece.y -= 1
-            current_value = -1 * (heur_bump(current_piece,grid) + heur_height(current_piece) + heur_rows(current_piece, grid) + heur_gaps(current_piece, grid))
+            current_value = -1 * (heur_bump(current_piece,grid) * 5 + heur_height(current_piece) + heur_rows(current_piece, grid) + heur_gaps(current_piece, grid))
             new_move = Move(current_piece.x, current_piece.y, current_piece.shape, current_piece.rotation, current_value, current_piece)
             moves.append(new_move)
             current_piece.y = 4
