@@ -156,14 +156,14 @@ def create_grid(locked_pos={}):
 def convert_shape_format(shape):
     positions = []
     format = shape.shape[shape.rotation % len(shape.shape)]
-
+    # Converts the string lists into coordinates
     for i, line in enumerate(format):
         row = list(line)
         for j, column in enumerate(row):
             if column == '0':
                 temp = (shape.x + j, shape.y + i)
                 positions.append(temp)
-
+    # Convert the list of coordinates into a proper format
     for i, pos in enumerate(positions):
         positions[i] = (pos[0] - 2, pos[1] - 4)
 
@@ -173,24 +173,26 @@ def convert_shape_format(shape):
 # Determine whether a space is already occupied, disables invalid moves
     # and detects collisions
 def valid_space(shape, grid):
+    # Create a nested list with all elements with an empty space
     accepted_pos = [[(j, i) for j in range(10) if grid[i]
                      [j] == (0, 0, 0)] for i in range(20)]
+    # Flatten the list
     accepted_pos = [j for sub in accepted_pos for j in sub]
-
     formatted = convert_shape_format(shape)
-
+    # If the piece is in an occupied space or not on the grid, it is not a valid move
     for pos in formatted:
         if pos not in accepted_pos and pos[1] > -1:
             return False
     return True
 
 
+# Check if the gamestate is in a lost position
 def check_lost(positions):
+    # If the pieces go beyond the grid height, the game is lost
     for pos in positions:
         x, y = pos
         if y < 1:
             return True
-
     return False
 
 
@@ -203,7 +205,6 @@ def get_shape():
 def draw_text_middle(surface, text, size, color):
     font = pygame.font.SysFont("arial", size, bold=True)
     label = font.render(text, 1, color)
-
     surface.blit(label, (top_left_x + play_width/2 - (label.get_width()/2),
                          top_left_y + play_height/2 - label.get_height()/2))
 
@@ -213,7 +214,6 @@ def draw_grid(surface, grid):
     # Determines the starting coordinates to draw the game
     sx = top_left_x
     sy = top_left_y
-
     # The lines for the grid
     for i in range(len(grid)):
         pygame.draw.line(surface, (128, 128, 128), (sx, sy +
@@ -225,8 +225,8 @@ def draw_grid(surface, grid):
 
 # If a row is full, this removes the blocks and moves the above values down
 def clear_rows(grid, locked):
-
     inc = 0
+    # If a row has no empty spaces, it is full
     for i in range(len(grid)-1, -1, -1):
         row = grid[i]
         if (0, 0, 0) not in row:
@@ -237,14 +237,13 @@ def clear_rows(grid, locked):
                     del locked[(j, i)]
                 except:
                     continue
-
+    # Shift the blocks above the cleared rows down a set amount
     if inc > 0:
         for key in sorted(list(locked), key=lambda x: x[1])[::-1]:
             x, y = key
             if y < ind:
                 newKey = (x, y + inc)
                 locked[newKey] = locked.pop(key)
-
     return inc
 
 
@@ -253,26 +252,26 @@ def draw_next_shape(shape, surface):
     # Text for the indicator
     font = pygame.font.SysFont('arial', 30)
     label = font.render('Next Shape', 1, (255, 255, 255))
-
     # Location of the next shape graphic
     sx = top_left_x + play_width + 50
     sy = top_left_y + play_height/2 - 100
     formatshape = shape.shape[shape.rotation % len(shape.shape)]
-
+    # Draw the next piece on the side
     for i, line in enumerate(formatshape):
         row = list(line)
         for j, column in enumerate(row):
             if column == '0':
                 pygame.draw.rect(surface, shape.color, (sx + j*block_size,
                                                         sy + i*block_size, block_size, block_size), 0)
-
     surface.blit(label, (sx + 10, sy - 30))
 
 
 # Write the end score in the text document if it is highest
 def update_score(nscore):
+    # For a new game, call upon the max score
     score = max_score()
     try:
+        # Open the document and update the score if it is a new max
         with open('scores.txt', 'w') as f:
             if int(score) > nscore:
                 f.write(str(score))
@@ -285,6 +284,7 @@ def update_score(nscore):
 # Read the high score from the text document
 def max_score():
     try:
+        # Read the max score document and parse the string
         with open('scores.txt', 'r') as f:
             lines = f.readlines()
             if len(lines) >= 1:
@@ -296,47 +296,38 @@ def max_score():
         return '0'
     # return '0'
 
+
 # Displays the game window
 def draw_window(surface, grid, score=0, last_score=0):
     # Create a blank canvas
     surface.fill((0, 0, 0))
-
+    # Graphics
     pygame.font.init()
     font = pygame.font.SysFont('arial', 60)
     label = font.render('CS 4701: Tetris', 1, (255, 255, 255))
-
     surface.blit(label, (top_left_x + play_width /
                          2 - (label.get_width() / 2), 30))
-
     # Current score
     font = pygame.font.SysFont('arial', 30)
     label = font.render('Score: ' + str(score), 1, (255, 255, 255))
-
     sx = top_left_x + play_width + 50
     sy = top_left_y + play_height/2 - 100
-
     surface.blit(label, (sx + 20, sy + 160))
     # High score label
     label = font.render('High Score: ', 1, (255, 255, 255))
-
     sx = top_left_x - 210
     sy = top_left_y + play_height/2 - 130
-
     surface.blit(label, (sx, sy))
-
     label = font.render(str(last_score), 1, (255, 255, 255))
     sx = top_left_x - 180
     sy = top_left_y + play_height/2 - 90
     surface.blit(label, (sx, sy))
-
     for i in range(len(grid)):
         for j in range(len(grid[i])):
             pygame.draw.rect(surface, grid[i][j], (top_left_x + j*block_size,
                                                    top_left_y + i*block_size, block_size, block_size), 0)
-
     pygame.draw.rect(surface, (255, 255, 255), (top_left_x,
                                                 top_left_y, play_width, play_height), 5)
-
     draw_grid(surface, grid)
     # pygame.display.update()
 
@@ -346,6 +337,7 @@ def main(win):
     locked_positions = {}
     # Trigger for depth 1 heuristic
     auto = False
+    # Trigger for depth 2 heuristic
     auto2 = False
     tik = 0
     change_piece = False
@@ -360,6 +352,7 @@ def main(win):
     temp = False
 
     while run:
+        # Update the displayed graphics and grid
         grid = create_grid(locked_positions)
         fall_time += clock.get_rawtime()
         level_time += clock.get_rawtime()
@@ -372,20 +365,24 @@ def main(win):
 
         if fall_time/1000 > fall_speed:
             fall_time = 0
-            temp = True
-            #current_piece.y += 1
+            # Disable automatic fall to allow for calculations
+            # current_piece.y += 1
             if not(valid_space(current_piece, grid)) and current_piece.y > 0:
                 current_piece.y -= 1
                 change_piece = True
 
+        # Automate depth 1 algorithm
         if auto:
+            # Generate a list of moves sorted by its value
             moves = depth1_ai(current_piece, next_piece, grid, locked_positions)
+            # If the list is empty, no valid moves, end the game
             if (len(moves) == 0):
                 draw_text_middle(win, "Game Over", 80, (255, 255, 255))
                 pygame.display.update()
                 pygame.time.delay(1500)
                 run = False
                 update_score(score)
+            # If there is a move, run the best move
             else:
                 best_move = moves.pop(0)
                 current_piece.rotation = best_move.rotation
@@ -393,45 +390,36 @@ def main(win):
                 current_piece.y = best_move.y
                 change_piece = True
 
+        # Automate depth 2 algorithm
         if auto2:
+            # Generate a list of moves sorted by its value
             moves = depth1_ai(current_piece, next_piece, grid, locked_positions)
-            if tik < 10:
-                tik += 1
-                if (len(moves) == 0):
+            # If the list is empty, no valid moves, end the game
+            if (len(moves) == 0):
+                draw_text_middle(win, "Game Over", 80, (255, 255, 255))
+                pygame.display.update()
+                pygame.time.delay(1500)
+                run = False
+                update_score(score)
+            else:
+                # Generate depth 2 moves
+                depth_moves = depth2_ai(moves,current_piece, next_piece, grid, locked_positions)
+                # If the list is empty, no valid moves, end the game
+                if (len(depth_moves) == 0):
                     draw_text_middle(win, "Game Over", 80, (255, 255, 255))
                     pygame.display.update()
                     pygame.time.delay(1500)
                     run = False
                     update_score(score)
+                # If there is a move, run the best move
                 else:
-                    best_move = moves.pop(0)
+                    best_move = depth_moves.pop(0)
                     current_piece.rotation = best_move.rotation
                     current_piece.x = best_move.x
                     current_piece.y = best_move.y
                     change_piece = True
-            else:
-                moves = depth1_ai(current_piece, next_piece, grid, locked_positions)
-                if (len(moves) == 0):
-                    draw_text_middle(win, "Game Over", 80, (255, 255, 255))
-                    pygame.display.update()
-                    pygame.time.delay(1500)
-                    run = False
-                    update_score(score)
-                else:
-                    depth_moves = depth2_ai(moves,current_piece, next_piece, grid, locked_positions)
-                    if (len(depth_moves) == 0):
-                        draw_text_middle(win, "Game Over", 80, (255, 255, 255))
-                        pygame.display.update()
-                        pygame.time.delay(1500)
-                        run = False
-                        update_score(score)
-                    else:
-                        best_move = depth_moves.pop(0)
-                        current_piece.rotation = best_move.rotation
-                        current_piece.x = best_move.x
-                        current_piece.y = best_move.y
-                        change_piece = True
 
+        # Input management
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
@@ -462,10 +450,10 @@ def main(win):
                     if not(valid_space(current_piece, grid)) and current_piece.y > 0:
                         current_piece.y -= 1
                         change_piece = True
-                if event.key == pygame.K_s:
-                    current_piece.y = 4
+                # Best move determined by depth 1
                 if event.key == pygame.K_a:
                     moves = depth1_ai(current_piece, next_piece, grid, locked_positions)
+                    # If there are no valid moves, game is over
                     if (len(moves) == 0):
                         while (valid_space(current_piece, grid)):
                             current_piece.y += 1
@@ -476,19 +464,23 @@ def main(win):
                         pygame.time.delay(1500)
                         run = False
                         update_score(score)
+                    # Generate and play the best move
                     else:
                         best_move = moves.pop(0)
                         current_piece.rotation = best_move.rotation
                         current_piece.x = best_move.x
                         current_piece.y = best_move.y
                         change_piece = True
+                # Toggle automated depth 1 moves
                 if event.key == pygame.K_z:
                     if auto:
                         auto = False
                     else:
                         auto = True
+                # Best move determined by depth 2
                 if event.key == pygame.K_s:
                     moves = depth1_ai(current_piece, next_piece, grid, locked_positions)
+                    # If there are no valid moves, game is over
                     if (len(moves) == 0):
                         while (valid_space(current_piece, grid)):
                             current_piece.y += 1
@@ -499,8 +491,10 @@ def main(win):
                         pygame.time.delay(1500)
                         run = False
                         update_score(score)
+                    # Generate best move in depth 2
                     else:
                         depth_moves = depth2_ai(moves,current_piece, next_piece, grid, locked_positions)
+                        # If there are no valid moves, game is over
                         if (len(depth_moves) == 0):
                             while (valid_space(current_piece, grid)):
                                 current_piece.y += 1
@@ -511,25 +505,30 @@ def main(win):
                             pygame.time.delay(1500)
                             run = False
                             update_score(score)
+                        # Generate and play the best move
                         else:
                             best_move = depth_moves.pop(0)
                             current_piece.rotation = best_move.rotation
                             current_piece.x = best_move.x
                             current_piece.y = best_move.y
                             change_piece = True
+                # Toggle automated depth 1 moves
                 if event.key == pygame.K_x:
                     if auto2:
                         auto2 = False
                     else:
                         auto2 = True
 
+        # Generate coordinate list of the current piece
         shape_pos = convert_shape_format(current_piece)
 
+        # Update the graphics to display the current piece
         for i in range(len(shape_pos)):
             x, y = shape_pos[i]
             if y > -1:
                 grid[y][x] = current_piece.color
 
+        # Lock the current piece and switch to the next piece
         if change_piece:
             for pos in shape_pos:
                 p = (pos[0], pos[1])
@@ -717,6 +716,9 @@ def depth1_ai(current_piece, next_piece, grid, locked_positions):
 # Calculate best move for current piece while considering the next piece
 def depth2_ai(moves, current_piece, next_piece, grid, locked_positions):
     depth_moves = []
+    current_piece.x = 0
+    current_piece.y = 0
+    # Generate next best moves for the top 10 moves for the first piece
     for move in moves[:10]:
         current_piece.rotation = move.rotation
         current_piece.x = move.x
@@ -749,15 +751,15 @@ def depth2_ai(moves, current_piece, next_piece, grid, locked_positions):
                 next_piece.y = 4
                 next_piece.x += 1
             num_of_next_rotation -= 1
+            # Reset X and Y values and rotate the piece
             next_piece.y = 4
             next_piece.x = 4
             next_piece.rotation += 1
             if not(valid_space(next_piece, grid)):
                 next_piece.rotation -= 1
+        # Reset the grid
         grid_temp = grid
-    current_piece.rotation = 0
-    current_piece.x = 4
-    current_piece.y = 4
+    # Sort the list of moves by value
     sort_moves = sorted(depth_moves, key=lambda x: x.value)
     return sort_moves
 
